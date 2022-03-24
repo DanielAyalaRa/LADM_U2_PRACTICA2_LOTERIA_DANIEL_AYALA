@@ -30,23 +30,10 @@ class Hilo(p:MainActivity) : Thread() {
                         } else {
                             puntero.runOnUiThread {
                                 todas = false
-                                puntero.cardMostrar(contador)
-                                sleep(100)
+                                puntero.cardMostrar(contador+1)
                                 puntero.binding.txtCartas.setText("Cartas: ${contador+1}")
                                 puntero.binding.imagen.setImageResource(puntero.baraja[contador].imagen)
-                                try {
-                                    val mp = MediaPlayer.create(puntero,puntero.baraja[contador].audio)
-                                    mp.start()
-                                    sleep(1200)
-                                    mp.reset()
-                                    sleep(100)
-                                } catch (e:IOException) {
-                                    AlertDialog.Builder(puntero)
-                                        .setTitle("FALLO EN EL AUDIO")
-                                        .setMessage(e.message)
-                                        .setNeutralButton("ACEPTAR", {d,i -> d.dismiss()})
-                                        .show()
-                                }
+                                puntero.reproducir(contador)
                             }
                         }
                     }
@@ -58,26 +45,15 @@ class Hilo(p:MainActivity) : Thread() {
                             verificar = false
                             puntero.runOnUiThread {
                                 puntero.binding.btnVerificar.visibility = View.INVISIBLE
+                                puntero.binding.btnInicio.setText("JUGAR DE NUEVO")
                             }
                         } else {
                             puntero.runOnUiThread {
                                 todas = false
-                                puntero.cardMostrar(contador2)
+                                puntero.cardMostrar(contador2+1)
                                 puntero.binding.txtCartas.setText("Cartas: ${contador2+1}")
                                 puntero.binding.imagen.setImageResource(puntero.baraja[contador2].imagen)
-                                try {
-                                    val mp = MediaPlayer.create(puntero,puntero.baraja[contador2].audio)
-                                    mp.start()
-                                    sleep(1200)
-                                    mp.reset()
-                                    sleep(100)
-                                } catch (e:IOException) {
-                                    AlertDialog.Builder(puntero)
-                                        .setTitle("FALLO EN EL AUDIO")
-                                        .setMessage(e.message)
-                                        .setNeutralButton("ACEPTAR", {d,i -> d.dismiss()})
-                                        .show()
-                                }
+                                puntero.reproducir(contador2)
                             }
                         }
                         contador2++
@@ -85,10 +61,11 @@ class Hilo(p:MainActivity) : Thread() {
                     contador++
                 }
             } else {
-                contador2 = contador-1
+                contador2 = contador-1 // Obtenemos el indice donde termino el juego
                 contador = -1
                 puntero.runOnUiThread {
                     puntero.binding.btnInicio.visibility = View.VISIBLE
+                    puntero.binding.txtCartas.setText("Cartas: ${contador+1}")
                 }
                 ejecutar = true
                 todas = true
@@ -148,13 +125,25 @@ class Hilo(p:MainActivity) : Thread() {
             puntero.binding.btnInicio.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(puntero,R.color.salmon))
             puntero.binding.btnPausar.visibility = View.INVISIBLE
             puntero.binding.btnVerificar.visibility = View.VISIBLE
+            if (todas) {
+                AlertDialog.Builder(puntero)
+                    .setTitle("¡Cartas Terminadas!")
+                    .setMessage("Hay NO hubo un ganador.")
+                    .setNeutralButton("ACEPTAR", {d,i -> d.dismiss()})
+                    .show()
+            }
+            if (!todas) {
+                AlertDialog.Builder(puntero)
+                    .setTitle("¡GANADOR!")
+                    .setMessage("Hay un ganador.")
+                    .setNeutralButton("ACEPTAR", {d,i -> d.dismiss()})
+                    .show()
+            }
         }
     }
 
     fun cancelarHilo() {
         pausarHilo()
-        /*contador = -1
-        todas = true*/
         terminar()
     }
 }

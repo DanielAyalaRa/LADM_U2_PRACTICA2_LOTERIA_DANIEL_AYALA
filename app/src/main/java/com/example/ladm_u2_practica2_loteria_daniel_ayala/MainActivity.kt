@@ -1,13 +1,18 @@
 package com.example.ladm_u2_practica2_loteria_daniel_ayala
 
+import android.app.AlertDialog
 import android.content.res.ColorStateList
+import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ladm_u2_practica2_loteria_daniel_ayala.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
@@ -65,16 +70,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun cardMostrar(tam:Int) { // Mostramos las card view
+    fun cardMostrar(tam:Int) = GlobalScope.launch { // Mostramos las card view
         var vector = ArrayList<Carta>()
         (0..tam-1).forEach {
             vector.add(baraja[it])
         }
         /* Adaptamos las card view para mandarle el vector con las cartas que se van mostrando en pantalla*/
-        val adapter = CustomAdapter(vector)
-        binding.recyclerView.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
-        binding.recyclerView.scrollToPosition(tam-1)
-        binding.recyclerView.adapter = adapter
+        runOnUiThread {
+            val adapter = CustomAdapter(vector)
+            binding.recyclerView.layoutManager = LinearLayoutManager(this@MainActivity,LinearLayoutManager.HORIZONTAL,false)
+            binding.recyclerView.scrollToPosition(tam-1)
+            binding.recyclerView.adapter = adapter
+        }
     }
 
     fun aleatorio(lista:ArrayList<Carta>) { // Ordena de forma aleatorio el arreglo
@@ -163,6 +170,43 @@ class MainActivity : AppCompatActivity() {
                 hilo.nuevoJuego()
             }
         }
+    }
+
+    fun reproducir(pos:Int) = GlobalScope.launch {
+        val contador2 = pos
+        try {
+            val mp = MediaPlayer.create(this@MainActivity,baraja[contador2].audio)
+            mp.start()
+            delay(1800)
+            mp.reset()
+        } catch (e: IOException) {
+            AlertDialog.Builder(this@MainActivity)
+                .setTitle("FALLO EN EL AUDIO")
+                .setMessage(e.message)
+                .setNeutralButton("ACEPTAR", {d,i -> d.dismiss()})
+                .show()
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?) : Boolean {
+        menuInflater.inflate(R.menu.sobremi,menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.acerca -> {
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("ACERCA DE...")
+                    .setMessage("(C) Reservados Daniel Ayala\n" +
+                            "Dimensiones de emulador: 1080x2160")
+                    .show()
+            }
+            R.id.salir -> {
+                finish()
+            }
+        }
+        return true
     }
 
     fun llenarBaraja() {
